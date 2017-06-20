@@ -7,7 +7,8 @@
 //
 
 #import <XCTest/XCTest.h>
-
+#import <Realm/Realm.h>
+#import "FailObject.h"
 @interface RealmNotInBugTests : XCTestCase
 
 @end
@@ -16,7 +17,31 @@
 
 - (void)setUp {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    RLMRealm *realm = [RLMRealm defaultRealm];
+    [realm transactionWithBlock:^{
+        [realm deleteAllObjects];
+    } error:nil];
+    [realm transactionWithBlock:^{
+        FailObject * obj1 = [[FailObject alloc] init];
+        obj1.name = @"FACA";
+        [realm addObject:obj1];
+    } error:nil];
+    [realm transactionWithBlock:^{
+        FailObject * obj1 = [[FailObject alloc] init];
+        obj1.name = @"FACB";
+        [realm addObject:obj1];
+    } error:nil];
+    [realm transactionWithBlock:^{
+        FailObject * obj1 = [[FailObject alloc] init];
+        obj1.name = @"FACC";
+        [realm addObject:obj1];
+    } error:nil];
+    [realm transactionWithBlock:^{
+        FailObject * obj1 = [[FailObject alloc] init];
+        obj1.name = @"FACA-C";
+        [realm addObject:obj1];
+    } error:nil];
+    
 }
 
 - (void)tearDown {
@@ -25,15 +50,12 @@
 }
 
 - (void)testExample {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
+
+    NSArray * not_in = @[@"FACC",@"FACA-C"];
+    NSPredicate * predicate = [NSPredicate predicateWithFormat:@"NOT %K IN %@",@"name",not_in];
+    RLMResults * results = [FailObject objectsWithPredicate:predicate];
+    XCTAssert(results.count == 2);
 }
 
-- (void)testPerformanceExample {
-    // This is an example of a performance test case.
-    [self measureBlock:^{
-        // Put the code you want to measure the time of here.
-    }];
-}
 
 @end
